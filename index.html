@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paris Métro Randomizer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            padding: 40px 30px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .mode-toggle {
+            display: flex;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            position: relative;
+            z-index: 2;
+        }
+
+        .mode-btn.active {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            color: #667eea;
+        }
+
+        .random-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 18px 36px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .random-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .random-btn:active {
+            transform: translateY(0);
+        }
+
+        .result-container {
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .station-info {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .station-info.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .station-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            line-height: 1.2;
+        }
+
+        .line-badges {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .line-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 10px 16px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: #495057;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .copy-btn {
+            background: #e3f2fd;
+            border-color: #90caf9;
+            color: #1976d2;
+        }
+
+        .copy-btn:hover {
+            background: #bbdefb;
+        }
+
+        .copy-btn.copied {
+            background: #c8e6c9;
+            border-color: #81c784;
+            color: #388e3c;
+        }
+
+        .maps-btn {
+            background: #fff3e0;
+            border-color: #ffcc02;
+            color: #f57c00;
+        }
+
+        .maps-btn:hover {
+            background: #ffe0b2;
+        }
+
+        .placeholder {
+            color: #95a5a6;
+            font-size: 18px;
+            font-style: italic;
+        }
+
+        .line-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid var(--line-color);
+        }
+
+        .line-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .line-terminus {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .station-name {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚇 Paris Métro Randomizer</h1>
+        <p class="subtitle">Discover random stations across the Paris Metro network</p>
+        
+        <div class="mode-toggle">
+            <button class="mode-btn active" data-mode="station">Random Station</button>
+            <button class="mode-btn" data-mode="line">Random Line</button>
+        </div>
+
+        <button class="random-btn" id="randomBtn">Pick a Random Station</button>
+
+        <div class="result-container">
+            <div class="station-info" id="resultInfo">
+                <div class="placeholder">Click the button above to discover a random métro station!</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Paris Métro line colors and information
+        const lineData = {
+            '1': { color: '#FFCD00', name: 'Château de Vincennes ↔ Pont de Neuilly' },
+            '2': { color: '#003CA6', name: 'Porte Dauphine ↔ Nation' },
+            '3': { color: '#837902', name: 'Pont de Levallois ↔ Gallieni' },
+            '3bis': { color: '#87D3DF', name: 'Gambetta ↔ Saint-Fargeau' },
+            '4': { color: '#CF009E', name: 'Porte de Clignancourt ↔ Porte d\'Orléans' },
+            '5': { color: '#FF7E2E', name: 'Bobigny ↔ Place d\'Italie' },
+            '6': { color: '#6ECA97', name: 'Charles de Gaulle ↔ Nation' },
+            '7': { color: '#FA9ABA', name: 'La Courneuve ↔ Villejuif' },
+            '7bis': { color: '#6ECA97', name: 'Louis Blanc ↔ Pré-Saint-Gervais' },
+            '8': { color: '#E19BDF', name: 'Balard ↔ Créteil' },
+            '9': { color: '#B6BD00', name: 'Pont de Sèvres ↔ Montreuil' },
+            '10': { color: '#C9910D', name: 'Boulogne ↔ Gare d\'Austerlitz' },
+            '11': { color: '#704B1C', name: 'Châtelet ↔ Mairie des Lilas' },
+            '12': { color: '#007852', name: 'Front Populaire ↔ Mairie d\'Issy' },
+            '13': { color: '#87D3DF', name: 'Asnières/Saint-Lazare ↔ Châtillon/Villejuif' },
+            '14': { color: '#62259D', name: 'Saint-Lazare ↔ Olympiades' }
+        };
+
+        // Comprehensive Paris Métro stations data
+        const stations = [
+            // Line 1
+            { name: "Château de Vincennes", lines: ["1"] },
+            { name: "Bérault", lines: ["1"] },
+            { name: "Saint-Mandé", lines: ["1"] },
+            { name: "Vincennes", lines: ["1"] },
+            { name: "Porte de Vincennes", lines: ["1"] },
+            { name: "Saint-Mandé", lines: ["1"] },
+            { name: "Nation", lines: ["1", "2", "6", "9"] },
+            { name: "Reuilly - Diderot", lines: ["1", "8"] },
+            { name: "Faidherbe - Chaligny", lines: ["1", "8"] },
+            { name: "Ledru-Rollin", lines: ["1", "8"] },
+            { name: "Bastille", lines: ["1", "5", "8"] },
+            { name: "Saint-Paul", lines: ["1"] },
+            { name: "Hôtel de Ville", lines: ["1", "11"] },
+            { name: "Châtelet", lines: ["1", "4", "7", "11", "14"] },
+            { name: "Louvre - Rivoli", lines: ["1"] },
+            { name: "Palais-Royal - Musée du Louvre", lines: ["1", "7"] },
+            { name: "Tuileries", lines: ["1"] },
+            { name: "Concorde", lines: ["1", "8", "12"] },
+            { name: "Champs-Élysées - Clemenceau", lines: ["1", "13"] },
+            { name: "Franklin D. Roosevelt", lines: ["1", "9"] },
+            { name: "George V", lines: ["1"] },
+            { name: "Charles de Gaulle - Étoile", lines: ["1", "2", "6"] },
+            { name: "Argentine", lines: ["1"] },
+            { name: "Porte Maillot", lines: ["1"] },
+            { name: "Les Sablons", lines: ["1"] },
+            { name: "Pont de Neuilly", lines: ["1"] },
+
+            // Line 2
+            { name: "Porte Dauphine", lines: ["2"] },
+            { name: "Victor Hugo", lines: ["2"] },
+            { name: "Étoile", lines: ["1", "2", "6"] },
+            { name: "Ternes", lines: ["2"] },
+            { name: "Courcelles", lines: ["2"] },
+            { name: "Monceau", lines: ["2"] },
+            { name: "Villiers", lines: ["2", "3"] },
+            { name: "Rome", lines: ["2"] },
+            { name: "Place de Clichy", lines: ["2", "13"] },
+            { name: "Blanche", lines: ["2"] },
+            { name: "Pigalle", lines: ["2", "12"] },
+            { name: "Anvers", lines: ["2"] },
+            { name: "Barbès - Rochechouart", lines: ["2", "4"] },
+            { name: "La Chapelle", lines: ["2"] },
+            { name: "Stalingrad", lines: ["2", "5", "7"] },
+            { name: "Jaurès", lines: ["2", "5", "7bis"] },
+            { name: "Colonel Fabien", lines: ["2"] },
+            { name: "Belleville", lines: ["2", "11"] },
+            { name: "Couronnes", lines: ["2"] },
+            { name: "Ménilmontant", lines: ["2"] },
+            { name: "Père Lachaise", lines: ["2", "3"] },
+            { name: "Philippe Auguste", lines: ["2"] },
+            { name: "Alexandre Dumas", lines: ["2"] },
+            { name: "Avron", lines: ["2"] },
+            { name: "Nation", lines: ["1", "2", "6", "9"] },
+
+            // Line 3
+            { name: "Pont de Levallois - Bécon", lines: ["3"] },
+            { name: "Anatole France", lines: ["3"] },
+            { name: "Louise Michel", lines: ["3"] },
+            { name: "Porte de Champerret", lines: ["3"] },
+            { name: "Pereire", lines: ["3"] },
+            { name: "Wagram", lines: ["3"] },
+            { name: "Malesherbes", lines: ["3"] },
+            { name: "Villiers", lines: ["2", "3"] },
+            { name: "Europe", lines: ["3"] },
+            { name: "Saint-Lazare", lines: ["3", "12", "13", "14"] },
+            { name: "Havre - Caumartin", lines: ["3", "9"] },
+            { name: "Opéra", lines: ["3", "7", "8"] },
+            { name: "Quatre-Septembre", lines: ["3"] },
+            { name: "Bourse", lines: ["3"] },
+            { name: "Sentier", lines: ["3"] },
+            { name: "Réaumur - Sébastopol", lines: ["3", "4"] },
+            { name: "Arts et Métiers", lines: ["3", "11"] },
+            { name: "Temple", lines: ["3"] },
+            { name: "République", lines: ["3", "5", "8", "9", "11"] },
+            { name: "Filles du Calvaire", lines: ["3", "8"] },
+            { name: "Saint-Sébastien - Froissart", lines: ["3", "8"] },
+            { name: "Chemin Vert", lines: ["3", "8"] },
+            { name: "Père Lachaise", lines: ["2", "3"] },
+            { name: "Gambetta", lines: ["3", "3bis"] },
+            { name: "Pelleport", lines: ["3"] },
+            { name: "Saint-Fargeau", lines: ["3", "3bis"] },
+            { name: "Gallieni (Parc de Bagnolet)", lines: ["3"] },
+
+            // Line 3bis
+            { name: "Gambetta", lines: ["3", "3bis"] },
+            { name: "Pelleport", lines: ["3bis"] },
+            { name: "Saint-Fargeau", lines: ["3", "3bis"] },
+
+            // Line 4
+            { name: "Porte de Clignancourt", lines: ["4"] },
+            { name: "Simplon", lines: ["4"] },
+            { name: "Marcadet - Poissonniers", lines: ["4", "12"] },
+            { name: "Château Rouge", lines: ["4"] },
+            { name: "Barbès - Rochechouart", lines: ["2", "4"] },
+            { name: "Gare du Nord", lines: ["4", "5"] },
+            { name: "Gare de l'Est", lines: ["4", "5", "7"] },
+            { name: "République", lines: ["3", "5", "8", "9", "11"] },
+            { name: "Temple", lines: ["3"] },
+            { name: "Hôtel de Ville", lines: ["1", "11"] },
+            { name: "Châtelet", lines: ["1", "4", "7", "11", "14"] },
+            { name: "Cité", lines: ["4"] },
+            { name: "Saint-Michel", lines: ["4"] },
+            { name: "Odéon", lines: ["4", "10"] },
+            { name: "Saint-Germain-des-Prés", lines: ["4"] },
+            { name: "Saint-Sulpice", lines: ["4"] },
+            { name: "Saint-Placide", lines: ["4"] },
+            { name: "Montparnasse - Bienvenüe", lines: ["4", "6", "12", "13"] },
+            { name: "Vavin", lines: ["4"] },
+            { name: "Raspail", lines: ["4", "6"] },
+            { name: "Denfert-Rochereau", lines: ["4", "6"] },
+            { name: "Mouton-Duvernet", lines: ["4"] },
+            { name: "Alésia", lines: ["4"] },
+            { name: "Porte d'Orléans", lines: ["4"] },
+
+            // Line 5
+            { name: "Bobigny - Pablo Picasso", lines: ["5"] },
+            { name: "Bobigny - Pantin - Raymond Queneau", lines: ["5"] },
+            { name: "Église de Pantin", lines: ["5"] },
+            { name: "Hoche", lines: ["5"] },
+            { name: "Porte de Pantin", lines: ["5"] },
+            { name: "Ourcq", lines: ["5"] },
+            { name: "Laumière", lines: ["5"] },
+            { name: "Jaurès", lines: ["2", "5", "7bis"] },
+            { name: "Stalingrad", lines: ["2", "5", "7"] },
+            { name: "Gare du Nord", lines: ["4", "5"] },
+            { name: "Gare de l'Est", lines: ["4", "5", "7"] },
+            { name: "Jacques Bonsergent", lines: ["5"] },
+            { name: "République", lines: ["3", "5", "8", "9", "11"] },
+            { name: "Oberkampf", lines: ["5", "9"] },
+            { name: "Richard-Lenoir", lines: ["5"] },
+            { name: "Bréguet - Sabin", lines: ["5"] },
+            { name: "Bastille", lines: ["1", "5", "8"] },
+            { name: "Quai de la Rapée", lines: ["5"] },
+            { name: "Gare d'Austerlitz", lines: ["5", "10"] },
+            { name: "Saint-Marcel", lines: ["5"] },
+            { name: "Campo-Formio", lines: ["5"] },
+            { name: "Place d'Italie", lines: ["5", "6", "7"] },
+
+            // Line 6
+            { name: "Charles de Gaulle - Étoile", lines: ["1", "2", "6"] },
+            { name: "Kléber", lines: ["6"] },
+            { name: "Boissière", lines: ["6"] },
+            { name: "Trocadéro", lines: ["6", "9"] },
+            { name: "Passy", lines: ["6"] },
+            { name: "Bir-Hakeim", lines: ["6"] },
+            { name: "Dupleix", lines: ["6"] },
+            { name: "La Motte-Picquet - Grenelle", lines: ["6", "8", "10"] },
+            { name: "Cambronne", lines: ["6"] },
+            { name: "Sèvres - Lecourbe", lines: ["6"] },
+            { name: "Pasteur", lines: ["6", "12"] },
+            { name: "Montparnasse - Bienvenüe", lines: ["4", "6", "12", "13"] },
+            { name: "Edgar Quinet", lines: ["6"] },
+            { name: "Raspail", lines: ["4", "6"] },
+            { name: "Denfert-Rochereau", lines: ["4", "6"] },
+            { name: "Saint-Jacques", lines: ["6"] },
+            { name: "Glacière", lines: ["6"] },
+            { name: "Corvisart", lines: ["6"] },
+            { name: "Place d'Italie", lines: ["5", "6", "7"] },
+            { name: "Nationale", lines: ["6"] },
+            { name: "Chevaleret", lines: ["6"] },
+            { name: "Quai de la Gare", lines: ["6"] },
+            { name: "Bercy", lines: ["6", "14"] },
+            { name: "Dugommier", lines: ["6"] },
+            { name: "Daumesnil", lines: ["6", "8"] },
+            { name: "Bel-Air", lines: ["6"] },
+            { name: "Picpus", lines: ["6"] },
+            { name: "Nation", lines: ["1", "2", "6", "9"] },
+
+            // Line 7
+            { name: "La Courneuve 8 Mai 1945", lines: ["7"] },
+            { name: "Fort d'Aubervilliers", lines: ["7"] },
+            { name: "Aubervilliers - Pantin - Quatre Chemins", lines: ["7"] },
+            { name: "Porte de la Villette", lines: ["7"] },
+            { name: "Corentin Cariou", lines: ["7"] },
+            { name: "Crimée", lines: ["7"] },
+            { name: "Riquet", lines: ["7"] },
+            { name: "Stalingrad", lines: ["2", "5", "7"] },
+            { name: "Louis Blanc", lines: ["7", "7bis"] },
+            { name: "Château-Landon", lines: ["7"] },
+            { name: "Gare de l'Est", lines: ["4", "5", "7"] },
+            { name: "Poissonnière", lines: ["7"] },
+            { name: "Cadet", lines: ["7"] },
+            { name: "Le Peletier", lines: ["7"] },
+            { name: "Chaussée d'Antin - La Fayette", lines: ["7", "9"] },
+            { name: "Opéra", lines: ["3", "7", "8"] },
+            { name: "Pyramides", lines: ["7", "14"] },
+            { name: "Palais-Royal - Musée du Louvre", lines: ["1", "7"] },
+            { name: "Pont Neuf", lines: ["7"] },
+            { name: "Châtelet", lines: ["1", "4", "7", "11", "14"] },
+            { name: "Pont au Change", lines: ["7"] },
+            { name: "Châtelet", lines: ["1", "4", "7", "11", "14"] },
+            { name: "Pont Marie", lines: ["7"] },
+            { name: "Sully - Morland", lines: ["7"] },
+            { name: "Pont de l'Arsenal", lines: ["7"] },
+            { name: "Bastille", lines: ["1", "5", "8"] },
+            { name: "Richard-Lenoir", lines: ["5"] },
+            { name: "Voltaire", lines: ["9"] },
+            { name: "Charonne", lines: ["9"] },
+            { name: "Rue des Boulets", lines: ["9"] },
+            { name: "Nation", lines: ["1", "2", "6", "9"] },
+            { name: "Buzenval", lines: ["9"] },
+            { name: "Maraîchers", lines: ["9"] },
+            { name: "Porte de Montreuil", lines: ["9"] },
+            { name: "Robespierre", lines: ["9"] },
+            { name: "Croix de Chavaux", lines: ["9"] },
+            { name: "Mairie de Montreuil", lines: ["9"] },
+            { name: "Place d'Italie", lines: ["5", "6", "7"] },
+            { name: "Le Kremlin-Bicêtre", lines: ["7"] },
+            { name: "Villejuif - Léo Lagrange", lines: ["7"] },
+            { name: "Villejuif - Paul Vaillant-Couturier", lines: ["7"] },
+            { name: "Villejuif - Louis Aragon", lines: ["7"] },
+
+            // Line 7bis
+            { name: "Louis Blanc", lines: ["7", "7bis"] },
+            { name: "Jaurès", lines: ["2", "5", "7bis"] },
+            { name: "Bolivar", lines: ["7bis"] },
+            { name: "Buttes Chaumont", lines: ["7bis"] },
+            { name: "Botzaris", lines: ["7bis"] },
+            { name: "Place des Fêtes", lines: ["7bis", "11"] },
+            { name: "Pré-Saint-Gervais", lines: ["7bis"] },
+
+            // Line 8
+            { name: "Balard", lines: ["8"] },
+            { name: "Lourmel", lines: ["8"] },
+            { name: "Boucicaut", lines: ["8"] },
+            { name: "Félix Faure", lines: ["8"] },
+            { name: "Commerce", lines: ["8"] },
+            { name: "La Motte-Picquet - Grenelle", lines: ["6", "8", "10"] },
+            { name: "École Militaire", lines: ["8"] },
+            { name: "La Tour-Maubourg", lines: ["8"] },
+            { name: "Invalides", lines: ["8", "13"] },
+            { name: "Concorde", lines: ["1", "8", "12"] },
+            { name: "Opéra", lines: ["3", "7", "8"] },
+            { name: "Richelieu - Drouot", lines: ["8", "9"] },
+            { name: "Grands Boulevards", lines: ["8", "9"] },
+            { name: "Bonne Nouvelle", lines: ["8", "9"] },
+            { name: "Strasbourg - Saint-Denis", lines: ["4", "8", "9"] },
+            { name: "République", lines: ["3", "5", "8", "9", "11"] },
+            { name: "Filles du Calvaire", lines: ["3", "8"] },
+            { name: "Saint-Sébastien - Froissart", lines: ["3", "8"] },
+            { name: "Chemin Vert", lines: ["3", "8"] },
+            { name: "Bastille", lines: ["1", "5", "8"] },
+            { name: "Ledru-Rollin", lines: ["1", "8"] },
+            { name: "Faidherbe - Chaligny", lines: ["1", "8"] },
+            { name: "Reuilly - Diderot", lines: ["1", "8"] },
+            { name: "Montgallet", lines: ["8"] },
+            { name: "Daumesnil", lines: ["6", "8"] },
+            { name: "Michel Bizot", lines: ["8"] },
+            { name: "Porte Dorée", lines: ["8"] },
+            { name: "Porte de Charenton", lines: ["8"] },
+            { name: "Liberté", lines: ["8"] },
+            { name: "Charenton - Écoles", lines: ["8"] },
+            { name: "École Vétérinaire de Maisons-Alfort", lines: ["8"] },
+            { name: "Maisons-Alfort - Stade", lines: ["8"] },
+            { name: "Maisons-Alfort - Les Juilliottes", lines: ["8"] },
+            { name: "Créteil - L'Échat", lines: ["8"] },
+            { name: "Créteil - Université", lines: ["8"] },
+            { name: "Créteil - Préfecture", lines: ["8"] },
+
+            // Line 9
+            { name: "Pont de Sèvres", lines: ["9"] },
+            { name: "Billancourt", lines: ["9"] },
+            { name: "Marcel Sembat", lines: ["9"] },
+            { name: "Porte de Saint-Cloud", lines: ["9"] },
+            { name: "Exelmans", lines: ["9"] },
+            { name: "Michel-Ange - Molitor", lines: ["9", "10"] },
+            { name: "Michel-Ange - Auteuil", lines: ["9", "10"] },
+            { name: "Jasmin", lines: ["9"] },
+            { name: "Ranelagh", lines: ["9"] },
+            { name: "La Muette", lines: ["9"] },
+            { name: "Rue de la Pompe", lines: ["9"] },
+            { name: "Trocadéro", lines: ["6", "9"] },
+            { name: "Iéna", lines: ["9"] },
+            { name: "Alma - Marceau", lines: ["9"] },
+            { name: "Franklin D. Roosevelt", lines: ["1", "9"] },
+            { name: "Saint-Philippe du Roule", lines: ["9"] },
+            { name: "Miromesnil", lines: ["9", "13"] },
+            { name: "Saint-Augustin", lines: ["9"] },
+            { name: "Havre - Caumartin", lines: ["3", "9"] },
+            { name: "Chaussée d'Antin - La Fayette", lines: ["7", "9"] },
+            { name: "Richelieu - Drouot", lines: ["8", "9"] },
+            { name: "Grands Boulevards", lines: ["8", "9"] },
+            { name: "Bonne Nouvelle", lines: ["8", "9"] },
+            { name: "Strasbourg - Saint-Denis", lines: ["4", "8", "9"] },
+            { name: "République", lines: ["3", "5", "8", "9", "11"] },
+            { name: "Oberkampf", lines: ["5", "9"] },
+            { name: "Saint-Ambroise", lines: ["9"] },
+            { name: "Voltaire", lines: ["9"] },
+            { name: "Charonne", lines: ["9"] },
+            { name: "Rue des Boulets", lines: ["9"] },
+            { name: "Nation", lines: ["1", "2", "6", "9"] },
+            { name: "Buzenval", lines: ["9"] },
+            { name: "Maraîchers", lines: ["9"] },
+            { name: "Porte de Montreuil", lines: ["9"] },
+            { name: "Robespierre", lines: ["9"] },
+            { name: "Croix de Chavaux", lines: ["9"] },
+            { name: "Mairie de Montreuil", lines: ["9"] },
+
+            // Line 10
+            { name: "Boulogne - Pont de Saint-Cloud", lines: ["10"] },
+            { name: "Sèvres - Babylone", lines: ["10", "12"] },
+            { name: "Mabillon", lines: ["10"] },
+            { name: "Odéon", lines: ["4", "10"] },
+            { name: "Cluny - La Sorbonne", lines: ["10"] },
+            { name: "Maubert - Mutualité", lines: ["10"] },
+            { name: "Cardinal Lemoine", lines: ["10"] },
+            { name: "Jussieu", lines: ["7", "10"] },
+            { name: "Gare d'Austerlitz", lines: ["5", "10"] },
+
+            // Line 11
+            { name: "Châtelet", lines: ["1", "4", "7", "11", "14"] },
+            { name: "Hôtel de Ville", lines: ["1", "11"] },
+            { name: "Rambuteau", lines: ["11"] },
+            { name: "Arts et Métiers", lines: ["3", "11"] },
+            { name: "République", lines: ["3", "5", "8", "9", "11"] },
+            { name: "Goncourt", lines: ["11"] },
+            { name: "Belleville", lines: ["2", "11"] },
+            { name: "Pyrénées", lines: ["11"] },
+            { name: "Jourdain", lines: ["11"] },
+            { name: "Place des Fêtes", lines: ["7bis", "11"] },
+            { name: "Télégraphe", lines: ["11"] },
+            { name: "Mairie des Lilas", lines: ["11"] },
+
+            // Line 12
+            { name: "Front Populaire", lines: ["12"] },
+            { name: "Porte de la Chapelle", lines: ["12"] },
+            { name: "Marx Dormoy", lines: ["12"] },
+            { name: "Marcadet - Poissonniers", lines: ["4", "12"] },
+            { name: "Jules Joffrin", lines: ["12"] },
+            { name: "Lamarck - Caulaincourt", lines: ["12"] },
+            { name: "Abbesses", lines: ["12"] },
+            { name: "Pigalle", lines: ["2", "12"] },
+            { name: "Saint-Georges", lines: ["12"] },
+            { name: "Notre-Dame-des-Lorettes", lines: ["12"] },
+            { name: "Trinité - d'Estienne d'Orves", lines: ["12"] },
+            { name: "Saint-Lazare", lines: ["3", "12", "13", "14"] },
+            { name: "Concorde", lines: ["1", "8", "12"] },
+            { name: "Assemblée Nationale", lines: ["12"] },
+            { name: "Solférino", lines: ["12"] },
+            { name: "Rue du Bac", lines: ["12"] },
+            { name: "Sèvres - Babylone", lines: ["10", "12"] },
+            { name: "Rennes", lines: ["12"] },
+            { name: "Notre-Dame-des-Champs", lines: ["12"] },
+            { name: "Montparnasse - Bienvenüe", lines: ["4", "6", "12", "13"] },
+            { name: "Falguière", lines: ["12"] },
+            { name: "Pasteur", lines: ["6", "12"] },
+            { name: "Volontaires", lines: ["12"] },
+            { name: "Vaugirard", lines: ["12"] },
+            { name: "Convention", lines: ["12"] },
+            { name: "Porte de Versailles", lines: ["12"] },
+            { name: "Corentin Celton", lines: ["12"] },
+            { name: "Mairie d'Issy", lines: ["12"] },
+
+            // Line 13
+            { name: "Asnières - Gennevilliers Les Courtilles", lines: ["13"] },
+            { name: "Les Agnettes", lines: ["13"] },
+            { name: "Gabriel Péri (Asnières - Gennevilliers)", lines: ["13"] },
+            { name: "Mairie de Clichy", lines: ["13"] },
+            { name: "Porte de Clichy", lines: ["13"] },
+            { name: "Brochant", lines: ["13"] },
+            { name: "La Fourche", lines: ["13"] },
+            { name: "Place de Clichy", lines: ["2", "13"] },
+            { name: "Liège", lines: ["13"] },
+            { name: "Saint-Lazare", lines: ["3", "12", "13", "14"] },
+            { name: "Champs-Élysées - Clemenceau", lines: ["1", "13"] },
+            { name: "Invalides", lines: ["8", "13"] },
+            { name: "Varenne", lines: ["13"] },
+            { name: "Saint-François-Xavier", lines: ["13"] },
+            { name: "Duroc", lines: ["10", "13"] },
+            { name: "Montparnasse - Bienvenüe", lines: ["4", "6", "12", "13"] },
+            { name: "Gaîté", lines: ["13"] },
+            { name: "Pernety", lines: ["13"] },
+            { name: "Plaisance", lines: ["13"] },
+            { name: "Porte de Vanves", lines: ["13"] },
+            { name: "Malakoff - Plateau de Vanves", lines: ["13"] },
+            { name: "Malakoff - Rue Étienne Dolet", lines: ["13"] },
+            { name: "Châtillon - Montrouge", lines: ["13"] },
+            { name: "Saint-Germain-des-Prés", lines: ["4"] },
+            { name: "Châtelet - Les Halles", lines: ["1", "4", "7", "11", "14"] },
+            { name: "Basilique de Saint-Denis", lines: ["13"] },
+            { name: "Saint-Denis - Porte de Paris", lines: ["13"] },
+            { name: "Carrefour Pleyel", lines: ["13"] },
+            { name: "Mairie de Saint-Ouen", lines: ["13"] },
+            { name: "Garibaldi", lines: ["13"] },
+            { name: "Porte de Saint-Ouen", lines: ["13"] },
+            { name: "Guy Môquet", lines: ["13"] },
+            { name: "La Fourche", lines: ["13"] },
+            { name: "Miromesnil", lines: ["9", "13"] },
+            { name: "Villejuif - Louis Aragon", lines: ["7"] },
+
+            // Line 14
+            { name: "Saint-Lazare", lines: ["3", "12", "13", "14"] },
+            { name: "Châtelet", lines: ["1", "4", "7", "11", "14"] },
+            { name: "Gare de Lyon", lines: ["14"] },
+            { name: "Bercy", lines: ["6", "14"] },
+            { name: "Cour Saint-Émilion", lines: ["14"] },
+            { name: "Bibliothèque François Mitterrand", lines: ["14"] },
+            { name: "Olympiades", lines: ["14"] },
+            { name: "Pyramides", lines: ["7", "14"] }
+        ];
+
+        // Remove duplicate stations and normalize data
+        const uniqueStations = [];
+        const seenStations = new Set();
+
+        stations.forEach(station => {
+            const key = station.name.toLowerCase();
+            if (!seenStations.has(key)) {
+                seenStations.add(key);
+                uniqueStations.push(station);
+            }
+        });
+
+        // State management
+        let currentMode = 'station';
+        let lastResult = null;
+
+        // DOM elements
+        const modeButtons = document.querySelectorAll('.mode-btn');
+        const randomBtn = document.getElementById('randomBtn');
+        const resultInfo = document.getElementById('resultInfo');
+
+        // Event listeners
+        modeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const mode = btn.dataset.mode;
+                switchMode(mode);
+            });
+        });
+
+        randomBtn.addEventListener('click', () => {
+            if (currentMode === 'station') {
+                showRandomStation();
+            } else {
+                showRandomLine();
+            }
+        });
+
+        // Mode switching
+        function switchMode(mode) {
+            currentMode = mode;
+            modeButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            
+            if (mode === 'station') {
+                randomBtn.textContent = 'Pick a Random Station';
+            } else {
+                randomBtn.textContent = 'Pick a Random Line';
+            }
+        }
+
+        // Show random station
+        function showRandomStation() {
+            let randomStation;
+            
+            // Prevent immediate repeats
+            do {
+                randomStation = uniqueStations[Math.floor(Math.random() * uniqueStations.length)];
+            } while (lastResult && lastResult.type === 'station' && lastResult.data.name === randomStation.name);
+            
+            lastResult = { type: 'station', data: randomStation };
+            
+            const lineBadges = randomStation.lines.map(lineNum => 
+                `<div class="line-badge" style="background-color: ${lineData[lineNum].color};">
+                    ${lineNum}
+                </div>`
+            ).join('');
+            
+            const stationHtml = `
+                <div class="station-name">${randomStation.name}</div>
+                <div class="line-badges">${lineBadges}</div>
+                <div class="actions">
+                    <button class="action-btn copy-btn" onclick="copyToClipboard('${randomStation.name}')">
+                        📋 Copy
+                    </button>
+                    <a class="action-btn maps-btn" 
+                       href="https://www.google.com/maps/search/${encodeURIComponent(randomStation.name + ' métro Paris')}" 
+                       target="_blank">
+                        🗺️ Maps
+                    </a>
+                </div>
+            `;
+            
+            showResult(stationHtml);
+        }
+
+        // Show random line
+        function showRandomLine() {
+            const lineNumbers = Object.keys(lineData);
+            let randomLineNum;
+            
+            // Prevent immediate repeats
+            do {
+                randomLineNum = lineNumbers[Math.floor(Math.random() * lineNumbers.length)];
+            } while (lastResult && lastResult.type === 'line' && lastResult.data === randomLineNum);
+            
+            lastResult = { type: 'line', data: randomLineNum };
+            
+            const line = lineData[randomLineNum];
+            
+            const lineHtml = `
+                <div class="line-info" style="--line-color: ${line.color};">
+                    <div class="line-badge" style="background-color: ${line.color}; margin: 0 auto 15px;">
+                        ${randomLineNum}
+                    </div>
+                    <div class="line-name">Line ${randomLineNum}</div>
+                    <div class="line-terminus">${line.name}</div>
+                </div>
+                <div class="actions">
+                    <button class="action-btn copy-btn" onclick="copyToClipboard('Line ${randomLineNum}')">
+                        📋 Copy
+                    </button>
+                    <a class="action-btn maps-btn" 
+                       href="https://www.google.com/maps/search/metro+line+${randomLineNum}+paris" 
+                       target="_blank">
+                        🗺️ Maps
+                    </a>
+                </div>
+            `;
+            
+            showResult(lineHtml);
+        }
+
+        // Show result with animation
+        function showResult(html) {
+            resultInfo.classList.remove('show');
+            
+            setTimeout(() => {
+                resultInfo.innerHTML = html;
+                resultInfo.classList.add('show');
+            }, 150);
+        }
+
+        // Copy to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const copyBtn = document.querySelector('.copy-btn');
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '✅ Copied!';
+                copyBtn.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Make copyToClipboard globally accessible
+        window.copyToClipboard = copyToClipboard;
+    </script>
+</body>
+</html>
